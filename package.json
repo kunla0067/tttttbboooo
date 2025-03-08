@@ -1,0 +1,17 @@
+{
+  "name": "finalbb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index10.js",
+  "scripts": {
+    "dev": "nodemon index10.js",
+    "start": "node index10.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.2",
+    "dotenv": "^16.4.7",
+    "telegrambot": "^0.1.0"
+  }
+}
