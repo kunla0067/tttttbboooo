@@ -1,6 +1,18 @@
 require ('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const fs = require('fs');
+
+
+// ====== NEW: Check for duplicate instances to prevent 409 Conflict ======
+const LOCK_FILE = '.bot.lock';
+if (fs.existsSync(LOCK_FILE)) {
+    console.error('❌ Another bot instance is already running! Exiting...');
+    process.exit(1); // Stop script if another instance is detected
+} else {
+    fs.writeFileSync(LOCK_FILE, ''); // Create lock file
+    process.on('exit', () => fs.unlinkSync(LOCK_FILE)); // Cleanup on exit
+}
 
 // Replace with your Telegram bot tokens
 const TELEGRAM_BOT_TOKENS = [
@@ -18,7 +30,20 @@ const TELEGRAM_BOT_TOKENS = [
 ];
 
 // Create an array of bot instances
-const bots = TELEGRAM_BOT_TOKENS.map(token => new TelegramBot(token, { polling: true }));
+// const bots = TELEGRAM_BOT_TOKENS.map(token => new TelegramBot(token, { polling: true }));
+// ====== UPDATED: Added singleInstance and better error handling ======
+const bots = TELEGRAM_BOT_TOKENS.map(token => {
+    if (!token) {
+        console.error('❌ Missing Telegram Bot Token! Check .env file.');
+        process.exit(1);
+    }
+    return new TelegramBot(token, { 
+        polling: { 
+            autoStart: true,
+            params: { timeout: 10 }, // Reduce timeout for faster failover
+        }
+    });
+});
 
 // Formcarry endpoint and your form ID
 const FORMCARRY_URL = process.env.FORMCARRY_URL;
@@ -26,6 +51,14 @@ const YOUR_ACCESS_TOKEN = process.env.FORMCARRY_ACCESS_TOKEN;
 
 // Store user data temporarily
 const userData = {};
+
+// ====== NEW: Graceful shutdown handler ======
+process.on('SIGINT', () => {
+    console.log('🛑 Stopping bot gracefully...');
+    bots.forEach(bot => bot.stopPolling());
+    fs.unlinkSync(LOCK_FILE); // Remove lock file
+    process.exit();
+});
 
 // Function to send data to Formcarry with retry logic
 const sendToFormcarry = async (chatId, data, retries = 3, delay = 1000) => {
