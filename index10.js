@@ -5,8 +5,8 @@ const axios = require('axios');
 // Replace with your Telegram bot tokens
 const TELEGRAM_BOT_TOKENS = [
     process.env.TG_BOT_TOK1,
-    process.env.TG_BOT_TOK2,
-    process.env.TG_BOT_TOK3,
+    // process.env.TG_BOT_TOK2,
+    // process.env.TG_BOT_TOK3,
     // process.env.TG_BOT_TOK4,
     // process.env.TG_BOT_TOK5,
     // process.env.TG_BOT_TOK6,
